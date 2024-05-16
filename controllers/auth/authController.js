@@ -1,4 +1,3 @@
-const { validationResult } = require('express-validator');
 const User = require('../../models/user');
 const Token = require('../../models/token');
 const {
@@ -7,16 +6,12 @@ const {
 } = require('../../helpers/errors');
 const Mail = require('../../helpers/mail');
 const { signUpValidation } = require('../../validations/auth-validations');
-
+const { DateTime } = require('luxon');
 
 const signUp = async (req, res, next) => {
-    // const errors = validationResult(req);
     const { error, value } = signUpValidation.validate(req.body);
 
     try {
-        // if (!errors.isEmpty()) {    
-        //     throw new ValidationError(errors.array());
-        // }
 
         if (error) {
             throw new ValidationError(error.details)
@@ -47,11 +42,13 @@ const signUp = async (req, res, next) => {
             throw new ServerError()
         }
 
+        let d = DateTime.local()
         // send verification code
         let tokenModel = new Token({
             tokenType: 'email',
             identifier: user.email,
-            token: parseInt(Math.random() * (999999 - 100000) + 100000)
+            token: parseInt(Math.random() * (999999 - 100000) + 100000),
+            expiresAt: d.plus({ minute: 30})
         });
 
         let token = await tokenModel.save();

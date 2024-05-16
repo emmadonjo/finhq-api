@@ -1,14 +1,13 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { hashing } = require('../configs/configs');
-const { ServerError } = require('../helpers/errors');
 
 const Schema = mongoose.Schema({
   name: {type: String, required: true},
   email: {type: String, required: true, unique: true, index: true},
   password: { type: String, required: true},
   bio : String,
-  avatar: {type: String, required: false}
+  avatar: String,
 }, { versionKey: false, timestamps: true});
 
 
@@ -34,6 +33,12 @@ Schema.pre('save', async function (next) {
   }
   
   return next();
+});
+
+Schema.pre('save', function (next) {
+  this.email = this.email.toLowerCase();
+  
+  next();
 });
 
 

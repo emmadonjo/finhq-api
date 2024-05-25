@@ -4,6 +4,7 @@ const {
     ValidationError,
     ServerError
 } = require('../../helpers/errors');
+
 const Mail = require('../../helpers/mail');
 const { signUpValidation } = require('../../validations/auth-validations');
 const { DateTime } = require('luxon');

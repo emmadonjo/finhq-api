@@ -18,7 +18,7 @@ const Schema = mongoose.Schema({
     expiresAt: { type: Date, required: true }
 }, { versionKey: false, timestamps: true });
 
-Schema.statics.findOneByType = async function (type) {
+Schema.statics.findOneByType = function (type) {
     return this.findOne({ tokenType: type });
 }
 

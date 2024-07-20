@@ -90,6 +90,49 @@ const signUp = async (req, res, next) => {
     }
 }
 
+const signIn = async (req, res, next) => {
+
+    try {
+
+        let validation = new Validator(req.body, {
+            email:'required|email',
+            password:'required|string'
+        });
+        
+        if (validation.fails()) {
+            throw new ValidationError(validation.errors);
+        }
+
+        const { email, password } = req.body;
+
+        // check if user already exist
+        let user = await User.findOne({ email: email });
+
+        if (!user) {    
+            throw new ValidationError({
+                email: ['Email/password combination is incorrect.']
+            });
+        }
+
+        // verify password
+        let isValidPassword = await user.isValidPassword(password);
+
+        if (!isValidPassword) {    
+            throw new ValidationError({
+                password: ['Email/password combination is incorrect.']
+            });
+        }
+
+        // generate jwt token
+        return success(res, {
+            token: Jwt.sign({ id: user._id, email: user.email})
+        }, 'User signed in successfully',StatusCodes.OK);
+    }
+    catch (error) {
+        next(error);
+    }
+}
 
 
-module.exports = { signUp };
+
+module.exports = { signUp, signIn };

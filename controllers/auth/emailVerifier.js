@@ -59,10 +59,45 @@ const verifyEmail = async (req, res, next) => {
 const resendOtp = async (req, res, next) => {
 
     try {
-        console.log(req)
 
-        // get otp or create
-        // send otp
+        let token = await Token.findOneByType('email')
+            .where({ identifier: req.user.email, expiresAt: { $gte: new Date } });
+        
+        if (!token) {
+            tokenModel = new Token({
+                tokenType: 'email',
+                identifier: req.user.email,
+                token: parseInt(Math.random() * (999999 - 100000) + 100000),
+                expiresAt: d.plus({ minute: 30 })
+            });
+
+            token = await tokenModel.save();
+        }
+
+        let user = await User.findOne({ email: token.identifier });
+
+        if (!user) {
+            return failure(res, {}, 'This account does not exist.');
+        }
+        
+        let msg = `
+            <h2>Hi ${user.name},</h2>
+
+            <p>
+                Thanks for creating an account with us. To continue, kindly verify your email with the token below:
+            </p>
+            <p>
+                <strong>${token.token}</strong>
+            </p>
+
+            <p>
+                Regards,
+            </p>
+        `;
+        
+        await (new Mail).addTo(req.user.email, user.name)
+            .addSubject('OTP - Account Verification')
+            .send(msg);
 
         return success(res, {}, 'OTP successfully resent',StatusCodes.OK);
     }

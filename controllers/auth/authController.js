@@ -133,6 +133,28 @@ const signIn = async (req, res, next) => {
     }
 }
 
+const logout = async (req, res, next) => {
+
+    try {
+        req.user = null;
+
+        // destroy session cookie
+        res.clearCookie('connect.sid');
+
+        // destroy session data from client
+        res.setHeader('Set-Cookie', 'connect.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0');
+
+        // invalidate session
+        req.session = null;
+
+        return success(res, {}, 'Logout successful',StatusCodes.OK);
+    }
+    catch (error) {
+        console.log(error);
+        next(error);
+    }
+}
 
 
-module.exports = { signUp, signIn };
+
+module.exports = { signUp, signIn, logout };

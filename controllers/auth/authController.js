@@ -6,41 +6,49 @@ const {
 } = require('../../helpers/errors');
 
 const Mail = require('../../helpers/mail');
-const { signUpValidation } = require('../../validations/auth-validations');
 const { DateTime } = require('luxon');
+const { success } = require('../../helpers/response');
+const Validator = require('validatorjs');
+const Jwt = require('../../helpers/jwt');
+const { StatusCodes } = require('http-status-codes');
+
 
 const signUp = async (req, res, next) => {
-    const { error, value } = signUpValidation.validate(req.body);
 
     try {
 
-        if (error) {
-            throw new ValidationError(error.details)
+        let validation = new Validator(req.body, {
+             name:'required|string|min:3|max:255',
+            email:'required|email|max:255',
+            password:'required|string|min:8|max:32|confirmed'
+        });
+        
+        if (validation.fails()) {
+            throw new ValidationError(validation.errors);
         }
 
         const { name, email, password } = req.body;
+
         // check if user already exist
-        if ((await User.exists(email))) {
-    
-            throw new ValidationError([
-                {
-                    message: 'A user with this email already exists.',
-                    context: { key: 'email' }
-                }
-            ]);
+        let userExist = await User.exists(email.toLowerCase());
+
+        if (userExist) {    
+            throw new ValidationError({
+                email: ['A user with this email already exists.']
+            });
         }
 
         // create account
         let model = new User({
             name,
-            email,
+            email: email.toLowerCase(),
             password
         });
 
         let user = await model.save();
 
         if (!user) {
-            throw new ServerError()
+            throw new ServerError('User account could not be created');
         }
 
         let d = DateTime.local()
@@ -72,10 +80,10 @@ const signUp = async (req, res, next) => {
             .addSubject('OTP - Account Verification')
             .send(msg);
         
-        return res.status(201).json({
-            status: true,
-            message: 'User sign up successful.'
-        });
+        // generate jwt token
+        return success(res, {
+            token: Jwt.sign({ id: user._id, email: user.email})
+        }, 'User account created successfully',StatusCodes.CREATED);
     }
     catch (error) {
         next(error);

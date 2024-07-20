@@ -18,7 +18,7 @@ Schema.methods.isValidPassword = async function (password) {
 Schema.statics.exists = async function (email) {
   let u = await this.findOne({ email });
 
-  return !!u;
+  return u ? true : false;
 }
 
 Schema.pre('save', async function (next) {

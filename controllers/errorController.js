@@ -2,16 +2,12 @@ const { StatusCodes } = require("http-status-codes");
 const { ValidationError } = require("../helpers/errors");
 const { failure } = require("../helpers/response");
 
-const handler = async (error, req, res, next) => {
-    console.log(error);
-    
+const handler = async (error, req, res, next) => {   
     if (error instanceof ValidationError) {
-        let errors = error.errors.map(err => ({
-            [err.context.key]: err.message
-        }))
+
         return failure(
             res,
-            errors,
+            error.errors,
             error.message,
             StatusCodes.UNPROCESSABLE_ENTITY
         );

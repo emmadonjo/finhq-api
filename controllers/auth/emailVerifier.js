@@ -64,7 +64,7 @@ const resendOtp = async (req, res, next) => {
             .where({ identifier: req.user.email, expiresAt: { $gte: new Date } });
         
         if (!token) {
-            tokenModel = new Token({
+            let tokenModel = new Token({
                 tokenType: 'email',
                 identifier: req.user.email,
                 token: parseInt(Math.random() * (999999 - 100000) + 100000),

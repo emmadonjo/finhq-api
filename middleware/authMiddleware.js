@@ -1,8 +1,9 @@
 const Jwt = require('../helpers/jwt');
 const { failure } = require('../helpers/response');
 const { StatusCodes } = require('http-status-codes');
+const User = require('../models/user');
 
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
     const authorizationHeader = req.headers['authorization'];
 
     const token = authorizationHeader && authorizationHeader.split(' ')[1];
@@ -11,13 +12,23 @@ const auth = (req, res, next) => {
         return failure(res, {}, 'Unauthorized', StatusCodes.UNAUTHORIZED);
     }
 
-    const user = Jwt.verify(token);
+    const verify = Jwt.verify(token);
 
-    if (user == null){
+    if (verify == null){
         return failure(res, {}, 'Unauthorized', StatusCodes.UNAUTHORIZED);
     }
 
-    req.user = user;
+    try {
+        let user = await User.findOne({ email: verify.email });
+        
+        if (!user) {
+            return failure(res, {}, 'Unauthorized', StatusCodes.UNAUTHORIZED);
+        }
+
+         req.user = user;
+    } catch (error) {
+        next(error);
+    }
 
     next();
 }

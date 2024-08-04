@@ -20,11 +20,11 @@ const signUp = async (req, res, next) => {
         let validation = new Validator(req.body, {
              name:'required|string|min:3|max:255',
             email:'required|email|max:255',
-            password:'required|string|min:8|max:32|confirmed'
+            password:'required|string|min:5|max:32|confirmed'
         });
         
         if (validation.fails()) {
-            throw new ValidationError(validation.errors);
+            throw new ValidationError(validation.errors.errors);
         }
 
         const { name, email, password } = req.body;
@@ -100,7 +100,8 @@ const signIn = async (req, res, next) => {
         });
         
         if (validation.fails()) {
-            throw new ValidationError(validation.errors);
+            
+            throw new ValidationError(validation.errors.errors);
         }
 
         const { email, password } = req.body;

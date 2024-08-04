@@ -16,7 +16,7 @@ const verifyEmail = async (req, res, next) => {
         });
         
         if (validation.fails()) {
-            throw new ValidationError(validation.errors);
+            throw new ValidationError(validation.errors.errors);
         }
 
         // find otp and owner

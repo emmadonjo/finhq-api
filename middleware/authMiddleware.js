@@ -19,7 +19,8 @@ const auth = async (req, res, next) => {
     }
 
     try {
-        let user = await User.findOne({ email: verify.email });
+        let user = await User.findOne({ email: verify.email })
+            .select('-password');
         
         if (!user) {
             return failure(res, {}, 'Unauthorized', StatusCodes.UNAUTHORIZED);

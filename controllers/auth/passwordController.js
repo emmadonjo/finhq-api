@@ -67,4 +67,51 @@ const sendOtp = async (req, res, next) => {
     }
 }
 
-module.exports = { sendOtp }
+const resetPassword = async (req, res, next) => {
+    const validation = new Validator(req.body, {
+        otp: 'required|string',
+        password: 'required|string|min:5|max:32|confirmed'
+    });
+
+    try {
+        if (validation.fails()) {
+            throw new ValidationError(validation.errors.errors);
+        }
+
+        let token = await Token.findOneByType('password')
+            .where('token', req.body.otp);
+        
+        if (!token) {
+            throw new ValidationError({
+                otp: ['Invalid OTP.']
+            });
+        }
+
+        let d = DateTime.local();
+        if (token.expiresAt < d) {
+            throw new ValidationError({
+                otp: ['OTP has expired']
+            });
+        }
+
+        let user = await User.findOne({ email: token.identifier });
+
+        if (!user) {
+            throw new ValidationError({
+                otp: ['No account found for this otp']
+            });
+        }
+
+
+        user.password= req.body.password;
+        await user.save();
+
+        await token.deleteOne(); 
+
+        return success(res, {}, 'Password reset successful.',StatusCodes.OK);
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = { sendOtp, resetPassword }
